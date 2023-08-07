@@ -1,0 +1,12 @@
+.notFound {
+    border: none;
+    padding: 0;
+    background-color: transparent;
+    font-family: inherit;
+    font-size: inherit;
+    color: blue;
+}
+
+.notFound:hover {
+    text-decoration: underline;
+}

@@ -1,1 +1,2 @@
-This is commit, but it is the second version.
+Это новостной сайт с возможностью регистрации. Основные технологии: React JS, Typescript и Firebase.
+Автор проекта: Могилин Роман (Mogilin Roman)

@@ -1,18 +1,20 @@
-import { useDispatch, useSelector } from "react-redux"
-import { AuthInitialStore, CHANGE_AUTH } from "../store/store"
+import React from "react"
+import { useNavigate } from "react-router-dom"
 
 const Profile = () => {
 
-    const isAuth = useSelector((state: any) => state.auth.isAuth)
+    let navigate = useNavigate()
 
-    const dispatch = useDispatch()
-
-    return (<>
-        <div>{isAuth ? 'Вы вошли в профиль' : 'Чтобы войти в профиль нажмите кнопку ниже'}</div>
-        <button style={{ marginTop: 10 }} onClick={() => {
-            dispatch({ type: CHANGE_AUTH })
-        }}>{isAuth ? 'Выйти' : 'Войти'}</button>
-    </>)
+    return (<React.Fragment>
+        <button onClick={(event) => {
+            event.preventDefault()
+            navigate('/profile/sign-up')
+        }}>Зарегестрироваться</button>
+        <button onClick={(event) => {
+            event.preventDefault()
+            navigate('/profile/sign-in')
+        }}>Войти</button>
+    </React.Fragment>)
 }
 
 export default Profile

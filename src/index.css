@@ -46,3 +46,48 @@ footer {
   background-color: var(--color-darkest);
   color: var(--color-the-brightest)
 }
+
+.active {
+  text-decoration: underline;
+}
+
+div.mainHeader {
+  font-size: var(--font-size-big);
+  font-weight: 700;
+}
+
+div.title {
+  font-size: var(--font-size-big);
+}
+
+div.header {
+  font-size: var(--font-size-middle);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+
+div.text {
+  font-size: var(--font-size-small);
+  margin-bottom: 20px;
+}
+
+div.text:last-child {
+  margin-bottom: 0;
+}
+
+form {
+  margin: 10px 0;
+}
+
+form>input.form_input {
+  margin-bottom: 10px;
+}
+
+form>input.form_input:nth-last-child(0) {
+  margin-bottom: 0;
+}
+
+form>button.form_button {
+  display: block;
+  margin-top: 0;
+}

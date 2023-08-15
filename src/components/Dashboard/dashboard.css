@@ -1,0 +1,10 @@
+.posts>div {
+    padding: 10px;
+    background: var(--color-the-brightest);
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.posts>div:last-child {
+    margin-bottom: 0;
+}

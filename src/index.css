@@ -1,7 +1,7 @@
 body {
   margin: 0;
   font-family: sans-serif;
-  --color-the-brightest: #edf6f9;
+  --color-the-brightest: #cfdebf;
   --color-bright: #a3b18a;
   --color-light: #588157;
   --color-dark: #3a5a40;
@@ -9,6 +9,11 @@ body {
   --font-size-big: 24px;
   --font-size-middle: 20px;
   --font-size-small: 16px;
+  --margin-top-of-footer: auto;
+  --margin-top-and-bottom-of-main: 0;
+  --button-color-delete: #fb6107;
+  --button-color-edit: #f3de2c;
+  --button-color-create: #7cb518;
   font-size: var(--font-size-small);
 }
 
@@ -26,7 +31,7 @@ footer {
 
 a {
   text-decoration: none;
-  color: var(--color-the-brightest);
+  color: white;
 }
 
 header {
@@ -41,10 +46,14 @@ header>nav>*:last-child {
   margin-right: 0;
 }
 
+main {
+  margin: var(--margin-top-and-bottom-of-main);
+}
+
 footer {
-  margin-top: auto;
+  margin-top: var(--margin-top-of-footer);
   background-color: var(--color-darkest);
-  color: var(--color-the-brightest)
+  color: white
 }
 
 .active {
@@ -90,4 +99,30 @@ form>input.form_input:nth-last-child(0) {
 form>button.form_button {
   display: block;
   margin-top: 0;
+}
+
+button.delete,
+button.edit,
+button.create {
+  padding: 5px;
+  color: white;
+  border: none;
+}
+
+button.delete:hover,
+button.edit:hover,
+button.create:hover {
+  cursor: pointer;
+}
+
+button.delete {
+  background-color: var(--button-color-delete);
+}
+
+button.edit {
+  background-color: var(--button-color-edit);
+}
+
+button.create {
+  background-color: var(--button-color-create);
 }

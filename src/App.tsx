@@ -4,13 +4,15 @@ import Layout from './Layout';
 import News from './components/News';
 import NotFound from './components/NotFound/NotFound';
 import Main from './components/Main';
-import Profile from './components/Profile';
+import Profile from './components/Profile/Profile';
 import PrivateRoute from './PrivateRoute';
 import { useSelector } from 'react-redux';
-import Dashboard from './components/Dashboard';
+import Dashboard from './components/Dashboard/Dashboard';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
 import { GlobalStore } from './store/types';
+import EditProfileInfo from './components/EditProfileInfo';
+import CreateOrEditPost from './components/CreatePostOrEdit';
 
 function App() {
 
@@ -34,8 +36,13 @@ function App() {
               <SignUp />
             </PrivateRoute>} />
             <Route path='dashboard' element={<PrivateRoute isAuthicated={isAuth} redirectPath='/profile' >
-              <Dashboard />
-            </PrivateRoute>} />
+              <Outlet />
+            </PrivateRoute>}>
+              <Route index={true} element={<Dashboard />} />
+              <Route path='edit-profile-info' element={<EditProfileInfo />} />
+              <Route path='create-post' element={<CreateOrEditPost type='create' />} />
+              <Route path='edit-post' element={<CreateOrEditPost type='edit' />} />
+            </Route>
           </Route>
           <Route path='*' element={<NotFound />} />
         </Route>

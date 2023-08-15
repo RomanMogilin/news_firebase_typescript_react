@@ -1,0 +1,8 @@
+body:has(>#root>main>center.profile) {
+    --margin-top-and-bottom-of-main: auto;
+    --margin-top-of-footer: 0
+}
+
+/* html>body>div#root :is(header, main>center.profile, footer) {
+    margin-top: 0;
+} */

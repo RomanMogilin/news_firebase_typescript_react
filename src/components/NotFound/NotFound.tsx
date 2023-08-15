@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import './notFound.css'
+import Button from "../../isolatedComponents/Button"
 
 const NotFound = () => {
 
@@ -7,10 +8,11 @@ const NotFound = () => {
 
     return (<>
         <div>Ошибка: страница не найдена.</div>
-        <button className="notFound" onClick={(event) => {
-            event.preventDefault()
-            navigate(-1)
-        }}>Вернуться обратно</button>
+        <Button
+            callback={() => navigate(-1)}
+            cssType="notFound"
+            text="Вернуться обратно"
+        />
     </>)
 }
 

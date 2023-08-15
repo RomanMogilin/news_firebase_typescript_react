@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from "react"
 import { useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom"
-import { signIn } from "../firebase/functions"
 import { GlobalStore } from '../store/types';
+import Button from "../isolatedComponents/Button";
+import { signIn } from "../firebase/authentication";
 
 /**
  * @description Вход для существующих пользователей
@@ -28,15 +29,15 @@ const SignIn = () => {
 
         }}>
             <div className="header">Почта:</div>
-            <input className="form_input" ref={emailRef} placeholder="Введите почту..."></input>
+            <input className="form_input" defaultValue={'abc123@gmail.com'} ref={emailRef} placeholder="Введите почту..."></input>
             <div className="header">Пароль:</div>
-            <input className="form_input" ref={passwordRef} placeholder="Введите пароль..."></input>
+            <input className="form_input" defaultValue={'654321'} ref={passwordRef} placeholder="Введите пароль..."></input>
             <button className="form_button" type="submit">Войти</button>
         </form>
-        <button onClick={(event) => {
-            event.preventDefault()
-            navigate('/profile')
-        }}>Вернуться обратно</button>
+        <Button
+            text="Вернуться обратно"
+            callback={() => navigate('/profile')}
+        />
     </React.Fragment>)
 }
 

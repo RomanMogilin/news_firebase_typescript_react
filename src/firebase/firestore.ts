@@ -4,11 +4,18 @@ import { ADD_POST, DELETE_POST, EDIT_DATE_OF_REGISTRATON, EDIT_USER_NAME } from 
 import { store } from "../store/store"
 import { PostContent, StorePost } from "../store/types"
 
+/**
+ * @returns возвращает все новости из базы данных
+ */
 export const getPosts = async () => {
     const querySnapshot = await getDocs(collection(dataBase, "posts"))
     return querySnapshot
 }
 
+/**
+ * @param userUid id пользователя на базе данных
+ * @param newName новое имя пользователя
+ */
 export const setUserName = async (userUid: string, newName: string) => {
     const userRef = doc(dataBase, 'users', userUid)
     await updateDoc(userRef, {
@@ -16,6 +23,10 @@ export const setUserName = async (userUid: string, newName: string) => {
     })
 }
 
+/**
+ * @param postId id поста на базе данных
+ * @param userUid id пользователя на базе данных
+ */
 export const deletePost = async (postId: string, userUid: string) => {
     let userRef = doc(dataBase, 'users', userUid)
     let postRef = doc(dataBase, 'posts', postId)
@@ -32,6 +43,10 @@ export const deletePost = async (postId: string, userUid: string) => {
     store.dispatch({ type: DELETE_POST, payload: postId })
 }
 
+/**
+ * @param postId id поста на базе данных
+ * @param content это массив с изменениями новости
+ */
 export const editPost = async (postId: string, content: PostContent) => {
 
     let postRef = doc(dataBase, 'posts', postId)

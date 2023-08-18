@@ -19,7 +19,12 @@ const CreateOrEditPost: FunctionComponent<CreateOrEditPostProps> = ({ type }) =>
             text: '',
             anons: '',
         },
-        author: location.state.author
+        author: location.state.author,
+        reaction: {
+            likes: 0,
+            dislikes: 0,
+            views: 0
+        }
     }
 
     const inputAnonsImgRef = useRef<HTMLInputElement>(null)
@@ -51,7 +56,7 @@ const CreateOrEditPost: FunctionComponent<CreateOrEditPostProps> = ({ type }) =>
                     anons: inputAnonsRef.current.value,
                     text: inputTextRef.current.value,
                     anons_img: inputAnonsImgRef.current.value,
-                })
+                }, locationStore.reaction)
                 navigate('/profile/dashboard')
             }
         }

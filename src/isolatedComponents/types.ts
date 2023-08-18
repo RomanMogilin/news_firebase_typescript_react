@@ -1,15 +1,21 @@
+import { ReactNode } from "react"
+import { StorePost } from "../store/types"
+
 export type cssType = 'delete' | 'edit' | 'create' | 'notFound'
 
-export interface ButtonProps extends React.HtmlHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
     text: string,
     callback: Function,
     cssType?: cssType
 }
 
-export interface PathForNavigate {
-    pathname: string;
-    search: string;
-    hash: string;
-}
 
-export type Path = string | Partial<PathForNavigate>;
+export interface ReactionProps extends React.HTMLAttributes<ReactNode> {
+    type: 'comment' | 'post',
+    canReact: boolean,
+    // userReaction: 'like' | 'dislike' | 'empty',
+    payload: {
+        post: StorePost
+        comment?: any,
+    }
+}

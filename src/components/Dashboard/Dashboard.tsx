@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux"
-import { GlobalStore, StorePost } from '../../store/types';
+import { GlobalStore, StorePost, UserReaction } from '../../store/types';
 import React from "react";
 import './dashboard.css'
 import { useNavigate } from "react-router-dom";
@@ -11,6 +11,7 @@ const Dashboard = () => {
 
     const userUid = useSelector((state: GlobalStore) => state.auth.userUid);
     const userPosts = useSelector((state: GlobalStore) => state.user.posts);
+    const userReaction = useSelector((state: GlobalStore) => state.user.reaction);
     const userDateOfRegistration = useSelector((state: GlobalStore) => state.user.dateOfRegistration);
     const userName = useSelector((state: GlobalStore) => state.user.userName);
     console.log(userPosts)
@@ -22,6 +23,17 @@ const Dashboard = () => {
         <div>UserUID: {userUid}</div>
         <div>Nickname: {userName}</div>
         <div>DateOfRegistration: {userDateOfRegistration}</div>
+        <div>Reaction:</div>
+        <div>{userReaction.length > 0 ?
+            userReaction.map((reaction: UserReaction) => {
+                return (<div key={`${userUid}_${reaction.postId}`}>
+                    <div>PostId: {reaction.postId}</div>
+                    <div>Reaction: {reaction.reaction}</div>
+                </div>)
+            })
+            :
+            "На данный момент вы не оценивали посты других пользователей"
+        }</div>
         <Button
             callback={() => navigate('/profile/dashboard/edit-profile-info')}
             cssType="edit"
@@ -35,32 +47,38 @@ const Dashboard = () => {
             text="Create Post"
         />
         <div className="posts">
-            {userPosts.length > 0 ? userPosts.map((postDate: StorePost, index: number) => (<div key={index}>
-                <Post postDate={postDate} />
-                <Button
-                    cssType="edit"
-                    text="Edit Post"
-                    callback={() => navigate('/profile/dashboard/edit-post', {
-                        state: {
-                            id: postDate.id,
-                            date: postDate.date,
-                            content: {
-                                anons_img: postDate.content.anons_img,
-                                header: postDate.content.header,
-                                text: postDate.content.text,
-                                anons: postDate.content.anons,
-                            },
-                            author: postDate.author
+            {userPosts.length > 0 ? userPosts.map((postDate: StorePost, index: number) => {
+
+                const dateForEdit: Readonly<StorePost> = {
+                    id: postDate.id,
+                    date: postDate.date,
+                    content: {
+                        anons_img: postDate.content.anons_img,
+                        header: postDate.content.header,
+                        text: postDate.content.text,
+                        anons: postDate.content.anons,
+                    },
+                    author: postDate.author,
+                    reaction: postDate.reaction
+                }
+
+                return (<div key={index}>
+                    <Post canReact={false} postDate={postDate} />
+                    <Button
+                        cssType="edit"
+                        text="Edit Post"
+                        callback={() => navigate('/profile/dashboard/edit-post', {
+                            state: dateForEdit
+                        })
                         }
-                    })
-                    }
-                />
-                <Button
-                    cssType="delete"
-                    text="Delete"
-                    callback={() => deletePost(postDate.id, userUid)}
-                />
-            </div>)) : 'У вас пока нет постов'}
+                    />
+                    <Button
+                        cssType="delete"
+                        text="Delete"
+                        callback={() => deletePost(postDate.id, userUid)}
+                    />
+                </div>)
+            }) : 'У вас пока нет постов'}
         </div>
     </React.Fragment>)
 }

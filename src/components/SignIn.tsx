@@ -24,7 +24,6 @@ const SignIn = () => {
         <div className="title">Войти в аккаунт:</div>
         <form onSubmit={(event) => {
             event.preventDefault()
-            console.log(`email: ${emailRef.current?.value}, password: ${passwordRef.current?.value}`)
             emailRef.current && passwordRef.current && signIn(emailRef.current.value, passwordRef.current.value)
 
         }}>

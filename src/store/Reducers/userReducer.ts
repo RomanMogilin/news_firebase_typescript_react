@@ -1,10 +1,11 @@
-import { ADD_POST, DELETE_POST, EDIT_DATE_OF_REGISTRATON, EDIT_USER_NAME } from "../consts"
-import { UserStore, userAction } from "../types"
+import { ADD_POST, ADD_USER_REACTION, DELETE_POST, DELETE_USER_REACTION, EDIT_DATE_OF_REGISTRATON, EDIT_USER_NAME, EDIT_USER_REACTION } from "../consts"
+import { UserReaction, UserStore, userAction } from "../types"
 
 const UserInitialStore: UserStore = {
     dateOfRegistration: '',
     posts: [],
-    userName: ''
+    userName: '',
+    reaction: []
 }
 
 /**
@@ -27,6 +28,22 @@ export const userReducer = (state = UserInitialStore, action: userAction) => {
                 return post.id !== action.payload
             })
             return { ...state, posts: [...filteredPosts] }
+        }
+        case ADD_USER_REACTION: {
+            let newReaction = [...state.reaction, { postId: action.payload.postId, reaction: action.payload.reaction }]
+            return { ...state, reaction: [...newReaction] }
+        }
+        case EDIT_USER_REACTION: {
+            let newReaction = [...state.reaction].map((reaction: UserReaction) => {
+                return reaction.postId === action.payload.postId ? { postId: action.payload.postId, reaction: action.payload.reaction } : reaction
+            })
+            return { ...state, reaction: [...newReaction] }
+        }
+        case DELETE_USER_REACTION: {
+            let newReaction = [...state.reaction].filter((reaction: UserReaction) => {
+                return reaction.postId !== action.payload.postId
+            })
+            return { ...state, reaction: [...newReaction] }
         }
         default: return state
     }

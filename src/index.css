@@ -126,3 +126,19 @@ button.edit {
 button.create {
   background-color: var(--button-color-create);
 }
+
+.comment {
+  padding: 10px;
+  background-color: var(--color-bright);
+  margin-bottom: 10px;
+}
+
+.comment:last-child {
+  margin-bottom: 0;
+}
+
+.dashboard_reaction {
+  padding: 10px;
+  margin: 5px;
+  background-color: var(--color-the-brightest);
+}

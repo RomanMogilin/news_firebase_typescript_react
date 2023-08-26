@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom';
 import Layout from './Layout';
 import News from './components/News';
@@ -10,21 +10,47 @@ import { useSelector } from 'react-redux';
 import Dashboard from './components/Dashboard/Dashboard';
 import SignIn from './components/SignIn';
 import SignUp from './components/SignUp';
-import { GlobalStore } from './store/types';
+import { GlobalStore, StorePost } from './store/types';
 import EditProfileInfo from './components/EditProfileInfo';
 import CreateOrEditPost from './components/CreatePostOrEdit';
+import PostPage from './components/PostPage';
+import { getPosts } from './firebase/firestore';
+import { EDIT_NEWS, EDIT_NEWS_LOADING } from './store/consts';
+import { store } from './store/store';
 
-function App() {
+const App = () => {
 
   const isAuth = useSelector((state: GlobalStore) => state.auth.isAuth)
-  console.log(isAuth)
+  // console.log(isAuth)
+  // test()
+
+  useEffect(() => {
+
+    getPosts().then((res) => {
+      let newPosts: StorePost[] | [] = []
+      res.forEach((post: any) => {
+        newPosts = [...newPosts, { ...post.data(), id: post.id }]
+      })
+      store.dispatch({ type: EDIT_NEWS, editNews: newPosts })
+      store.dispatch({ type: EDIT_NEWS_LOADING })
+    }).catch((err) => {
+      console.log(err)
+    })
+
+    console.log('News Mount')
+
+  }, [])
+
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path='/' element={<Layout />}>
           <Route index={true} element={<Main />} />
-          <Route path='news' element={<News />} />
+          <Route path='news' element={<><Outlet /></>}>
+            <Route index={true} element={<News />} />
+            <Route path=':postId' element={<PostPage />} />
+          </Route>
           <Route path='profile' element={<><Outlet /></>} >
             <Route index={true} element={<PrivateRoute isAuthicated={!isAuth} redirectPath='/profile/dashboard'>
               <Profile />

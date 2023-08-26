@@ -1,8 +1,8 @@
 import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from "firebase/firestore"
 import { dataBase } from "./init"
-import { ADD_POST, ADD_USER_REACTION, DELETE_POST, EDIT_DATE_OF_REGISTRATON, EDIT_USER_NAME } from "../store/consts"
+import { ADD_NEWS_ONE, ADD_USER_POST, ADD_USER_REACTION, DELETE_NEWS_ONE, DELETE_NEWS_POST_COMMENT, DELETE_USER_POST, DELETE_USER_REACTION, EDIT_USER_DATE_OF_REGISTRATON, EDIT_USER_NAME } from "../store/consts"
 import { store } from "../store/store"
-import { PostContent, PostsOfFirebaseCollectionPosts, Reaction, StorePost, UserReaction } from "../store/types"
+import { PostComment, PostContent, PostsOfFirebaseCollectionPosts, Reaction, StorePost, UserFirebaseStore, UserReaction } from "../store/types"
 
 /**
  * @returns возвращает все новости из базы данных
@@ -40,7 +40,8 @@ export const deletePost = async (postId: string, userUid: string) => {
         posts: [...firebasePostsFiltered]
     })
     await deleteDoc(postRef)
-    store.dispatch({ type: DELETE_POST, payload: postId })
+    store.dispatch({ type: DELETE_USER_POST, deleteUserPost: postId })
+    store.dispatch({ type: DELETE_NEWS_ONE, deleteNewsOne: postId })
 }
 
 /**
@@ -49,31 +50,85 @@ export const deletePost = async (postId: string, userUid: string) => {
  */
 export const editPost = async (postId: string, content: PostContent, reaction: Reaction) => {
 
-    let postRef = doc(dataBase, 'posts', postId)
-    await updateDoc(postRef, {
-        content: content,
-        reaction: reaction,
-    })
-
     let posts = store.getState().user.posts;
-    let post = posts.find((post: any) => {
+    let post: StorePost | undefined = posts.find((post: StorePost) => {
         return post.id === postId
     })
+    if (post) {
+        let postRef = doc(dataBase, 'posts', postId)
+        await updateDoc(postRef, {
+            content: content,
+            reaction: reaction,
+        })
 
-    console.log(`Edit post: `, post)
+        // console.log(`Edit post: `, post)
 
-    store.dispatch({ type: DELETE_POST, payload: postId })
+        store.dispatch({ type: DELETE_USER_POST, deleteUserPost: postId });
+        store.dispatch({ type: DELETE_NEWS_ONE, deleteNewsOne: postId });
 
-    const newStorePost: Readonly<StorePost> = {
-        id: postId,
-        date: post.date,
-        author: post.author,
-        content: content,
-        reaction: reaction
+        const newStorePost: Readonly<StorePost> = {
+            id: postId,
+            date: post.date,
+            author: post.author,
+            content: content,
+            reaction: reaction,
+            comments: post.comments
+        }
+
+        store.dispatch({ type: ADD_USER_POST, addUserPost: newStorePost });
+        console.log('EditPost:', newStorePost);
+        store.dispatch({ type: ADD_NEWS_ONE, addNewsOne: newStorePost });
     }
+    else {
+        return new Error('editPost: error')
+    }
+}
 
-    store.dispatch({
-        type: ADD_POST, payload: newStorePost
+export const docExists = async (collection: string, id: string) => {
+    const docRef = doc(dataBase, collection, id);
+    const docSnap = await getDoc(docRef);
+    let docSnapExist = docSnap.exists();
+    // store.dispatch({type: DELETE_USER_REACTION, deleteUserReaction: {postId: id} })
+    return { exist: docSnapExist, postId: id };
+}
+
+export const addComment = async (postId: string, commentDate: PostComment) => {
+    const postRef = doc(dataBase, 'posts', postId)
+    const comments: [] | PostComment[] | undefined = store.getState().news.posts.find((post: StorePost) => post.id === postId)?.comments
+    comments && console.log('firestore.ts addComment:', [commentDate, ...comments])
+    comments && await updateDoc(postRef, {
+        comments: [commentDate, ...comments]
+    })
+}
+
+export const test = async () => {
+    let testRef = doc(dataBase, 'test/PtDMcK10D3x4MZxr4C6c/comments', 'w6Mn9OI9CCe9cgy3EMTt')
+    let testSnap = await getDoc(testRef)
+    if (testSnap.exists()) {
+        console.log("Document data:", testSnap.data());
+    } else {
+        // docSnap.data() will be undefined in this case
+        console.log("No such document!");
+    }
+}
+
+export const deleteComment = async (commentId: string, postId: string) => {
+    console.log('deleteComment-postId:', postId)
+    console.log('deleteComment-commentId:', commentId)
+    const postRef = doc(dataBase, 'posts', postId)
+    console.log('deleteComment-posts:', store.getState().news.posts)
+    const comments: [] | PostComment[] | undefined = store.getState().news.posts.find((post: StorePost) => {
+        return post.id === postId
+    })?.comments
+    console.log('deleteComment-comments:', comments)
+    comments && console.log('deleteComment-filtered-comments:', [...comments].filter((comment: PostComment) => comment.id !== commentId))
+    comments && await updateDoc(postRef, {
+        comments: [...comments].filter((comment: PostComment) => comment.id !== commentId)
+    })
+    comments && store.dispatch({
+        type: DELETE_NEWS_POST_COMMENT, deleteNewsPostComment: {
+            postId, commentId
+        }
     })
 }
 
@@ -103,6 +158,7 @@ export const addPost = async (userUid: string, content: PostContent) => {
         date: currentTime,
         content: content,
         reaction: newReaction,
+        comments: []
     }
 
     const newStorePost: Readonly<StorePost> = {
@@ -110,11 +166,13 @@ export const addPost = async (userUid: string, content: PostContent) => {
         date: currentTime,
         author: userUid,
         content: content,
-        reaction: newReaction
+        reaction: newReaction,
+        comments: []
     }
 
     await setDoc(postRef, newFirebasePost)
-    store.dispatch({ type: ADD_POST, payload: newStorePost })
+    store.dispatch({ type: ADD_USER_POST, addUserPost: newStorePost })
+    store.dispatch({ type: ADD_NEWS_ONE, addNewsOne: newStorePost })
 }
 
 /**
@@ -129,16 +187,39 @@ export const getUserDateByUid = async (userUid: string) => {
     const getPostById = async (id: string) => {
         const postRef = doc(dataBase, 'posts', id)
         const postSnap = await getDoc(postRef)
+        const postSnapDate = postSnap.data() as PostsOfFirebaseCollectionPosts
+
         if (postSnap.exists() && postSnap) {
-            store.dispatch({ type: ADD_POST, payload: { ...postSnap.data(), id: id } })
+            store.dispatch({ type: ADD_USER_POST, addUserPost: { ...postSnapDate, id: id } })
         }
     }
 
     if (userSnap.exists() && userSnap) {
-        userSnap.data().posts.forEach((postId: string) => { getPostById(postId) })
-        store.dispatch({ type: EDIT_DATE_OF_REGISTRATON, payload: userSnap.data().dateOfRegistration })
-        store.dispatch({ type: EDIT_USER_NAME, payload: userSnap.data().userName })
-        userSnap.data().reaction.forEach((reaction: UserReaction) => { store.dispatch({ type: ADD_USER_REACTION, payload: { postId: reaction.postId, reaction: reaction.reaction } }) })
+        console.log('userSnap.data():', userSnap.data())
+        const userSnapDate = userSnap.data() as UserFirebaseStore
+        userSnapDate.posts.forEach((postId: string) => { getPostById(postId) })
+        store.dispatch({ type: EDIT_USER_DATE_OF_REGISTRATON, editUserDateOfRegistration: userSnapDate.dateOfRegistration })
+        store.dispatch({ type: EDIT_USER_NAME, editUserName: userSnapDate.userName })
+        userSnapDate.reaction.forEach((reaction: UserReaction) => {
+            console.log('reaction:', reaction)
+            console.log('reaction:', reaction.postId)
+            console.log('reaction:', reaction.reaction)
+            !!!reaction.commentId && docExists('posts', reaction.postId).then((res) => console.log('getUserDateByUid:', reaction.postId, res))
+            let newReaction: UserReaction = { postId: reaction.postId, reaction: reaction.reaction }
+            if (!!reaction.commentId) {
+                newReaction.commentId = reaction.commentId;
+            }
+            store.dispatch({ type: ADD_USER_REACTION, addUserReaction: newReaction })
+            !!!reaction.commentId && docExists('posts', reaction.postId).then((res) => {
+                console.log('getUserDateByUid:', reaction.postId, res)
+                if (res.exist === false) {
+                    let userReaction = store.getState().user.reaction;
+                    // updateFirestoreCollectionField('users', userUid, { reaction: [...userReaction.filter((currentReaction: UserReaction) => currentReaction.postId === reaction.postId)] })
+                    updateFirestoreCollectionField('users', userUid, { reaction: [...userReaction.filter((currentReaction: UserReaction) => currentReaction.postId !== reaction.postId)] })
+                    store.dispatch({ type: DELETE_USER_REACTION, deleteUserReaction: { postId: reaction.postId } })
+                }
+            })
+        })
     }
 }
 
@@ -156,16 +237,3 @@ export const updateFirestoreCollectionField = async (collectionName: string, doc
         ...changes
     }).catch((err) => console.log(err))
 }
-
-// Reaction
-
-// export const addReaction = async (postId: string, like: boolean, isUserReact: boolean) => {
-//     store.dispatch({
-//         type: EDIT_NEWS_REACTION, payload: {
-//             postId: postId,
-//             like: like,
-//             isUserReact: isUserReact
-//         }
-//     })
-// }
-// export const deleteReaction = async () => { }

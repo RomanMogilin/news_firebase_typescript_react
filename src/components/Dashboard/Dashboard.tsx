@@ -14,7 +14,6 @@ const Dashboard = () => {
     const userReaction = useSelector((state: GlobalStore) => state.user.reaction);
     const userDateOfRegistration = useSelector((state: GlobalStore) => state.user.dateOfRegistration);
     const userName = useSelector((state: GlobalStore) => state.user.userName);
-    console.log(userPosts)
 
     let navigate = useNavigate()
 
@@ -26,10 +25,21 @@ const Dashboard = () => {
         <div>Reaction:</div>
         <div>{userReaction.length > 0 ?
             userReaction.map((reaction: UserReaction) => {
-                return (<div key={`${userUid}_${reaction.postId}`}>
-                    <div>PostId: {reaction.postId}</div>
-                    <div>Reaction: {reaction.reaction}</div>
-                </div>)
+                // console.log(docExists('posts', reaction.postId), 'postId')
+                if (!!reaction.commentId) {
+                    return (<div className="dashboard_reaction" key={`${userUid}_${reaction.postId}_${reaction.commentId}`}>
+                        <div>PostId: {reaction.postId}</div>
+                        <div>Reaction: {reaction.reaction}</div>
+                        <div>CommentId: {reaction.commentId}</div>
+                        <Button text="перейти" callback={() => navigate(`/news/${reaction.postId}`, { state: { commentId: reaction.commentId } })} />
+                    </div>)
+                }
+                else {
+                    return (<div className="dashboard_reaction" key={!!reaction.commentId ? `${userUid}_${reaction.postId}` : `${userUid}_${reaction.postId}_${reaction.commentId}`}>
+                        <div>PostId: {reaction.postId} <Button text="перейти" callback={() => navigate(`/news/${reaction.postId}`)} /></div>
+                        <div>Reaction: {reaction.reaction}</div>
+                    </div>)
+                }
             })
             :
             "На данный момент вы не оценивали посты других пользователей"
@@ -59,7 +69,8 @@ const Dashboard = () => {
                         anons: postDate.content.anons,
                     },
                     author: postDate.author,
-                    reaction: postDate.reaction
+                    reaction: postDate.reaction,
+                    comments: postDate.comments
                 }
 
                 return (<div key={index}>

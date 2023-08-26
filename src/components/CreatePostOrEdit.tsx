@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useRef } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { StorePost } from "../store/types"
+import { PostContent, StorePost } from "../store/types"
 import { addPost, editPost } from "../firebase/firestore"
 
 interface CreateOrEditPostProps extends React.HTMLAttributes<HTMLElement> {
@@ -24,7 +24,8 @@ const CreateOrEditPost: FunctionComponent<CreateOrEditPostProps> = ({ type }) =>
             likes: 0,
             dislikes: 0,
             views: 0
-        }
+        },
+        comments: []
     }
 
     const inputAnonsImgRef = useRef<HTMLInputElement>(null)
@@ -41,22 +42,21 @@ const CreateOrEditPost: FunctionComponent<CreateOrEditPostProps> = ({ type }) =>
     const CreateUserOnSubmit = (event: any) => {
         event.preventDefault()
         if (inputAnonsImgRef.current && inputAnonsRef.current && inputHeaderRef.current && inputTextRef.current) {
+            const newPostContent: Readonly<PostContent> = {
+                header: inputHeaderRef.current.value,
+                anons: inputAnonsRef.current.value,
+                text: inputTextRef.current.value,
+                anons_img: inputAnonsImgRef.current.value,
+            }
             if (type === 'create') {
-                addPost(locationStore.author, {
-                    header: inputHeaderRef.current.value,
-                    anons: inputAnonsRef.current.value,
-                    text: inputTextRef.current.value,
-                    anons_img: inputAnonsImgRef.current.value,
-                })
+                locationStore.content = newPostContent
+                addPost(locationStore.author, newPostContent)
+                // dispatch({ type: ADD_NEWS_ONE, addNewsOne: newPost })
                 navigate('/profile/dashboard')
             }
             else if (type === 'edit') {
-                editPost(locationStore.id, {
-                    header: inputHeaderRef.current.value,
-                    anons: inputAnonsRef.current.value,
-                    text: inputTextRef.current.value,
-                    anons_img: inputAnonsImgRef.current.value,
-                }, locationStore.reaction)
+                // dispatch({ type: ADD_NEWS_ONE, addNewsOne: newPostContent })
+                editPost(locationStore.id, newPostContent, locationStore.reaction)
                 navigate('/profile/dashboard')
             }
         }

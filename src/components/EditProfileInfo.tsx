@@ -18,7 +18,7 @@ const EditProfileInfo = () => {
         event.preventDefault()
         if (inputUserNameRef.current) {
             setUserName(userUid, inputUserNameRef.current.value)
-            dispatch({ type: EDIT_USER_NAME, payload: inputUserNameRef.current.value })
+            dispatch({ type: EDIT_USER_NAME, editUserName: inputUserNameRef.current.value })
             navigate('/profile/dashboard')
         }
     }

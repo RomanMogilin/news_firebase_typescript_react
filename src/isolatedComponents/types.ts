@@ -13,9 +13,8 @@ export interface ButtonProps extends React.HTMLAttributes<HTMLButtonElement> {
 export interface ReactionProps extends React.HTMLAttributes<ReactNode> {
     type: 'comment' | 'post',
     canReact: boolean,
-    // userReaction: 'like' | 'dislike' | 'empty',
     payload: {
-        post: StorePost
-        comment?: any,
+        post: StorePost,
+        commentId?: string
     }
 }

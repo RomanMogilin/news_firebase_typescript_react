@@ -8,6 +8,7 @@ interface PostProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Post: FunctionComponent<PostProps> = ({ postDate, canReact }) => {
+    // console.log('Post.tsx:', postDate.id, postDate.content)
     return (<React.Fragment key={`${postDate.id}_${postDate.date}`}>
         <div>id: {postDate.id}</div>
         <div>date: {postDate.date}</div>

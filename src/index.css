@@ -23,6 +23,12 @@ body {
   flex-direction: column;
 }
 
+div>header {
+  display: flex;
+  justify-content: space-between;
+  color: white;
+}
+
 header,
 main,
 footer {
@@ -39,7 +45,7 @@ header {
 }
 
 header>nav>* {
-  margin-right: 20px;
+  margin-right: 30px;
 }
 
 header>nav>*:last-child {
@@ -77,7 +83,7 @@ div.header {
 
 div.text {
   font-size: var(--font-size-small);
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 div.text:last-child {
@@ -142,3 +148,52 @@ button.create {
   margin: 5px;
   background-color: var(--color-the-brightest);
 }
+
+.profile_photo {
+  max-width: 200px;
+  max-height: 200px;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+}
+
+div>img {
+  width: 100%;
+  height: 100%;
+}
+
+.post_img {
+  background-color: grey;
+  max-width: 800px;
+  max-height: 800px;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  border-radius: 10px;
+  margin-bottom: 15px;
+}
+
+.post_profile_photo {
+  background-color: grey;
+  max-width: 50px;
+  max-height: 50px;
+  aspect-ratio: 1/1;
+  overflow: hidden;
+  cursor: pointer;
+  margin-right: 15px;
+  border-radius: 50%;
+}
+
+.posts>div {
+  max-width: 800px;
+}
+
+.posts>div>div.title {
+  margin-bottom: 5px;
+}
+
+div.profile_info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+div.reaction {}

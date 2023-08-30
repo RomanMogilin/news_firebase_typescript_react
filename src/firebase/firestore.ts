@@ -1,6 +1,6 @@
 import { collection, deleteDoc, doc, getDoc, getDocs, setDoc, updateDoc } from "firebase/firestore"
-import { dataBase } from "./init"
-import { ADD_NEWS_ONE, ADD_USER_POST, ADD_USER_REACTION, DELETE_NEWS_ONE, DELETE_NEWS_POST_COMMENT, DELETE_USER_POST, DELETE_USER_REACTION, EDIT_USER_DATE_OF_REGISTRATON, EDIT_USER_NAME } from "../store/consts"
+import { addImg, dataBase } from "./init"
+import { ADD_NEWS_ONE, ADD_USER_POST, ADD_USER_REACTION, DELETE_NEWS_ONE, DELETE_NEWS_POST_COMMENT, DELETE_USER_POST, DELETE_USER_REACTION, EDIT_USER_DATE_OF_REGISTRATON, EDIT_USER_DESCRIPTION, EDIT_USER_NAME, EDIT_USER_PROFILE_PHOTO } from "../store/consts"
 import { store } from "../store/store"
 import { PostComment, PostContent, PostsOfFirebaseCollectionPosts, Reaction, StorePost, UserFirebaseStore, UserReaction } from "../store/types"
 
@@ -61,8 +61,6 @@ export const editPost = async (postId: string, content: PostContent, reaction: R
             reaction: reaction,
         })
 
-        // console.log(`Edit post: `, post)
-
         store.dispatch({ type: DELETE_USER_POST, deleteUserPost: postId });
         store.dispatch({ type: DELETE_NEWS_ONE, deleteNewsOne: postId });
 
@@ -88,7 +86,6 @@ export const docExists = async (collection: string, id: string) => {
     const docRef = doc(dataBase, collection, id);
     const docSnap = await getDoc(docRef);
     let docSnapExist = docSnap.exists();
-    // store.dispatch({type: DELETE_USER_REACTION, deleteUserReaction: {postId: id} })
     return { exist: docSnapExist, postId: id };
 }
 
@@ -109,6 +106,25 @@ export const test = async () => {
     } else {
         // docSnap.data() will be undefined in this case
         console.log("No such document!");
+    }
+}
+
+export const getDocFromFirebase = async (collection: string, id: string) => {
+    const docRef = doc(dataBase, collection, id);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+        if (collection === 'users') {
+            return docSnap.data() as UserFirebaseStore;
+        }
+        else if (collection === 'posts') {
+            return { ...docSnap.data(), id } as StorePost;
+        }
+        else {
+            return null
+        }
+    }
+    else {
+        return null
     }
 }
 
@@ -200,14 +216,18 @@ export const getUserDateByUid = async (userUid: string) => {
         userSnapDate.posts.forEach((postId: string) => { getPostById(postId) })
         store.dispatch({ type: EDIT_USER_DATE_OF_REGISTRATON, editUserDateOfRegistration: userSnapDate.dateOfRegistration })
         store.dispatch({ type: EDIT_USER_NAME, editUserName: userSnapDate.userName })
+        store.dispatch({ type: EDIT_USER_PROFILE_PHOTO, editUserProfilePhoto: userSnapDate.profilePhoto })
+        store.dispatch({ type: EDIT_USER_DESCRIPTION, editUserDescription: userSnapDate.description })
         userSnapDate.reaction.forEach((reaction: UserReaction) => {
             console.log('reaction:', reaction)
             console.log('reaction:', reaction.postId)
             console.log('reaction:', reaction.reaction)
             !!!reaction.commentId && docExists('posts', reaction.postId).then((res) => console.log('getUserDateByUid:', reaction.postId, res))
-            let newReaction: UserReaction = { postId: reaction.postId, reaction: reaction.reaction }
-            if (!!reaction.commentId) {
+            let newReaction: UserReaction = { postId: reaction.postId, reaction: reaction.reaction, postHeader: reaction.postHeader }
+            if (reaction.commentId !== undefined) {
+                console.log('firestore.ts|sign In|commentExistCondition:', reaction, ", reaction.commentId:", reaction.commentId, ", reaction.commentHeader:", reaction.commentHeader)
                 newReaction.commentId = reaction.commentId;
+                newReaction.commentHeader = reaction.commentHeader;
             }
             store.dispatch({ type: ADD_USER_REACTION, addUserReaction: newReaction })
             !!!reaction.commentId && docExists('posts', reaction.postId).then((res) => {
@@ -227,7 +247,9 @@ export const addUser = async (userUid: string, dateOfRegistration: string) => {
     await setDoc(doc(dataBase, `users`, userUid), {
         posts: [],
         dateOfRegistration: dateOfRegistration,
-        userName: dateOfRegistration
+        userName: dateOfRegistration,
+        profilePhoto: 'empty',
+        description: 'empty',
     })
 }
 

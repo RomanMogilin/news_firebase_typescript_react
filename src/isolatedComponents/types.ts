@@ -15,6 +15,7 @@ export interface ReactionProps extends React.HTMLAttributes<ReactNode> {
     canReact: boolean,
     payload: {
         post: StorePost,
-        commentId?: string
+        commentId?: string,
+        commentHeader?: string,
     }
 }

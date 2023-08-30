@@ -41,13 +41,13 @@ const PostPage = () => {
         comments: []
     }
     console.log('/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////')
-    console.log(post)
-    console.log(post.comments)
+    //console.log(post)
+    //console.log(post.comments)
     let [comments, changeComments] = useState<[] | PostComment[]>(post.comments)
     const dispatch = useDispatch()
 
-    console.log(postId)
-    console.log(comments)
+    //console.log(postId)
+    //console.log(comments)
     const [canChangeComments, changeCanChangeComments] = useState(true)
     let loadingTime: number = 750
     let delta: number = 25
@@ -72,6 +72,7 @@ const PostPage = () => {
             <div>Header: {post.content.header}</div>
             <div>postImg: {post.content.anons_img}</div>
             <div>Text: {post.content.text}</div>
+            <div><Reaction canReact={true} type={'post'} payload={{ post }} /></div>
             {comments && Array.isArray(comments) && isAuth && <form onSubmit={(event) => {
                 event.preventDefault()
                 console.log(postId, addCommentInputRef.current)
@@ -87,7 +88,7 @@ const PostPage = () => {
                         commentDependences: null,
                         text: currentText
                     }
-                    console.log(`newComment PostPageComponent:`, newComment)
+                    //console.log(`newComment PostPageComponent:`, newComment)
                     addComment(postId, newComment)
                     dispatch({
                         type: ADD_NEWS_POST_COMMENT, addNewsPostComment: {
@@ -119,7 +120,7 @@ const PostPage = () => {
                                     changeComments((prevState: [] | PostComment[]) => prevState.filter((currentComment: PostComment) => comment.id !== currentComment.id))
                                 }} />}
                             </div>
-                            <Reaction type='comment' canReact={true} payload={{ post: post, commentId: comment.id }} />
+                            <Reaction type='comment' canReact={true} payload={{ post: post, commentId: comment.id, commentHeader: comment.text }} />
                         </div>)
                     }) : 'Комментарии отсутствуют'}
                 </div>

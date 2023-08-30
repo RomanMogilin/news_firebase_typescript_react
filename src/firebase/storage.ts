@@ -1,1 +1,1 @@
-export const addImg = () => { }
+export const t = () => { }

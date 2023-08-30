@@ -1,7 +1,11 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { Auth, getAuth } from "firebase/auth";
-import { getStorage, ref } from "firebase/storage";
+import { getDownloadURL, getStorage, ref, uploadBytes } from "firebase/storage";
+import { store } from "../store/store";
+import { EDIT_USER_PROFILE_PHOTO } from "../store/consts";
+import { updateFirestoreCollectionField } from "./firestore";
+
 
 const firebaseConfig = {
     apiKey: process.env.REACT_APP_API_KEY,
@@ -13,7 +17,31 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const storage = getStorage();
-export const storageRef = ref(storage);
 export const dataBase: Firestore = getFirestore(app);
 export const authentication: Auth = getAuth(app);
+
+const storage = getStorage();
+
+export const addImg = async (path: string, file: File, userUid: string, collection: string) => {
+    let imgRef = ref(storage, `images/${path}`)
+    return uploadBytes(imgRef, file).then((res) => {
+        console.log(res)
+        return getImg(`images/${path}`, userUid, collection)
+    }).catch((err) => console.log(err))
+}
+
+export const getImg = async (path: string, userUid: string, collection: string) => {
+    const storage = getStorage();
+    const imageRef = ref(storage, path);
+    // Get the download URL
+    return getDownloadURL(imageRef)
+        .then((url) => {
+            console.log(url)
+            alert(collection === 'users')
+            if (collection === 'users') {
+
+            }
+            return url
+            // Insert url into an <img> tag to "download"
+        })
+}

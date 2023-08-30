@@ -1,4 +1,4 @@
-import { EDIT_NEWS_REACTION, EDIT_NEWS, EDIT_NEWS_LIKES_AND_DISLIKES, ADD_NEWS_ONE, ADD_NEWS_POST_COMMENT, DELETE_NEWS_POST_COMMENT, EDIT_NEWS_LOADING, ADD_NEWS_POST_COMMENT_REACTION, EDIT_NEWS_POST_COMMENT_REACTION, DELETE_NEWS_POST_COMMENT_REACTION, EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, DELETE_NEWS_ONE } from "../consts"
+import { EDIT_NEWS_REACTION, EDIT_NEWS, EDIT_NEWS_LIKES_AND_DISLIKES, ADD_NEWS_ONE, ADD_NEWS_POST_COMMENT, DELETE_NEWS_POST_COMMENT, EDIT_NEWS_LOADING, EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, DELETE_NEWS_ONE } from "../consts"
 import { NewsStore, PostComment, StorePost, newsAction } from "../types"
 
 const newsInitialStore: NewsStore = {
@@ -83,15 +83,6 @@ export const newsReducer = (state = newsInitialStore, action: newsAction) => {
             return { ...state, posts: newPosts }
         }
         case EDIT_NEWS_LOADING: return { ...state, loading: !state.loading }
-        case ADD_NEWS_POST_COMMENT_REACTION: {
-            return state
-        }
-        case EDIT_NEWS_POST_COMMENT_REACTION: {
-            return state
-        }
-        case DELETE_NEWS_POST_COMMENT_REACTION: {
-            return state
-        }
         case EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES: {
             let newPosts = [...state.posts].map((post: StorePost) => {
 

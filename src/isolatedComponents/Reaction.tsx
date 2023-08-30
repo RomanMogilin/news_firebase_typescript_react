@@ -3,9 +3,11 @@ import { ReactionProps } from "./types"
 import { useDispatch, useSelector } from "react-redux";
 import { GlobalStore, PostComment, StorePost, UserReaction } from "../store/types";
 import Button from "./Button";
-import { ADD_USER_REACTION, DELETE_USER_REACTION, EDIT_NEWS_LIKES_AND_DISLIKES, EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, EDIT_NEWS_REACTION, EDIT_USER_REACTION } from "../store/consts";
+import { ADD_USER_REACTION, DELETE_USER_ONLY_POST_REACTION, DELETE_USER_REACTION, EDIT_NEWS_LIKES_AND_DISLIKES, EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, EDIT_NEWS_REACTION, EDIT_USER_REACTION } from "../store/consts";
 import { updateFirestoreCollectionField } from "../firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { user } from "../store/functions/user";
+import DevMode from "./DevMode";
 
 const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload }) => {
 
@@ -45,9 +47,7 @@ const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload })
         }
         else if (type === 'comment') {
             payload.commentId ? commentId = payload.commentId : logError('Cannot read property of payload.commentId. Reaction.tsx component.')
-            currentComments = payload.post.comments.filter((comment: PostComment) => comment.id === commentId)[0]
-            // userCommentReaction = [...userReaction].find((userReactionElement: UserReaction) => (userReactionElement.postId === payload.post.id) && (userReactionElement.commentId === payload.commentId))?.reaction;
-            // console.log('------------------------------//////////////////////////////////////////////////', [...userReaction].find((userReactionElement: UserReaction) => (userReactionElement.postId === payload.post.id) && (userReactionElement.commentId === payload.commentId))?.reaction, '///////////////////////------------------------------------')
+            currentComments = payload.post.comments.filter((comment: PostComment) => comment.id === commentId)[0];
             likes = currentComments.commentReaction.likes;
             dislikes = currentComments.commentReaction.dislikes;
         }
@@ -58,20 +58,24 @@ const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload })
             const postPageState: Readonly<StorePost> = payload.post
             navigate(`/news/${postId}`, { state: postPageState })
         }
+        // console.log('Reaction.tsx|payload.post.content.header:', payload.post.content.header)
         let changeLikes = () => {
             if (type === 'post') {
                 if (userReactionString === 'empty') {
-                    const newUserReaction: UserReaction = { postId, reaction: 'like' }
-                    updateFirestoreCollectionField('posts', postId, { reaction: { likes: likes + 1, dislikes, views } })
-                    updateFirestoreCollectionField('users', userUid, { reaction: [...userReaction, newUserReaction] })
-                    dispatch({ type: EDIT_NEWS_REACTION, editNewsReaction: { ReactionType: 'like', postId, count: likes + 1 } })
+                    const newUserReaction: UserReaction = { postId, reaction: 'like', postHeader: payload.post.content.header }
+                    updateFirestoreCollectionField('posts', postId, { reaction: { likes: likes + 1, dislikes, views } });
+                    updateFirestoreCollectionField('users', userUid, { reaction: [newUserReaction, ...userReaction] });
+                    user.reaction.post.changeLikesAndDislikes(postId, likes + 1, dislikes);
                     dispatch({ type: ADD_USER_REACTION, addUserReaction: newUserReaction })
                 }
                 else if (userReactionString === 'like') {
                     updateFirestoreCollectionField('posts', postId, { reaction: { likes: likes - 1, dislikes, views } })
-                    updateFirestoreCollectionField('users', userUid, { reaction: [...userReaction.filter((reaction: UserReaction) => reaction.postId === postId)] })
-                    dispatch({ type: EDIT_NEWS_REACTION, editNewsReaction: { ReactionType: 'like', postId, count: likes - 1 } })
-                    dispatch({ type: DELETE_USER_REACTION, deleteUserReaction: { postId: postId } })
+                    updateFirestoreCollectionField('users', userUid, {
+                        reaction: [...userReaction].filter((reaction: UserReaction) => reaction.postId !== postId)
+                    });
+                    user.reaction.post.changeLikesAndDislikes(postId, likes - 1, dislikes);
+                    dispatch({ type: DELETE_USER_ONLY_POST_REACTION, deleteUserOnlyPostReaction: postId })
+                    // dispatch({ type: DELETE_USER_REACTION, deleteUserReaction: { postId: postId } })
                 }
                 else if (userReactionString === 'dislike') {
                     updateFirestoreCollectionField('users', userUid, {
@@ -85,8 +89,9 @@ const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload })
                         })]
                     })
                     updateFirestoreCollectionField('posts', postId, { reaction: { likes: likes + 1, dislikes: dislikes - 1, views } })
-                    dispatch({ type: EDIT_USER_REACTION, editUserReaction: { postId, reaction: 'like' } })
-                    dispatch({ type: EDIT_NEWS_LIKES_AND_DISLIKES, editNewsLikesAndDislikes: { postId, likes: likes + 1, dislikes: dislikes - 1 } })
+                    let newReaction: UserReaction = { postId, reaction: 'like', postHeader: payload.post.content.header };
+                    dispatch({ type: EDIT_USER_REACTION, editUserReaction: newReaction })
+                    user.reaction.post.changeLikesAndDislikes(postId, likes + 1, dislikes - 1);
                 }
             }
             ///type: comment///
@@ -104,16 +109,10 @@ const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload })
                             else { return currentComment }
                         })
                     })
-                    updateFirestoreCollectionField('users', userUid, { reaction: [...userReaction, { postId, commentId, reaction: 'like' }] })
-                    dispatch({
-                        type: EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, editNewsPostCommentReactionLikesAndDislikes: {
-                            likes: likes + 1,
-                            dislikes: dislikes,
-                            postId: postId,
-                            commentId: commentId,
-                        }
-                    });
-                    dispatch({ type: ADD_USER_REACTION, addUserReaction: { postId, commentId, reaction: 'like' } })
+                    let newUserReaction: UserReaction = { postId, commentId, reaction: 'like', postHeader: payload.post.content.header, commentHeader: payload.commentHeader };
+                    updateFirestoreCollectionField('users', userUid, { reaction: [newUserReaction, ...userReaction] })
+                    user.reaction.comment.changeLikesAndDislikes(postId, commentId, likes + 1, dislikes);
+                    dispatch({ type: ADD_USER_REACTION, addUserReaction: newUserReaction })
                 }
                 /// comment like like
                 else if (userCommentString === 'like') {
@@ -133,23 +132,8 @@ const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload })
                         reaction: [...userReaction].filter((currentReaction: UserReaction) => {
                             return (!currentReaction.commentId) || (currentReaction.commentId !== commentId) || (currentReaction.postId !== postId)
                         })
-                    })
-                    dispatch({
-                        type: EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, editNewsPostCommentReactionLikesAndDislikes: {
-                            likes: likes + 1,
-                            dislikes: dislikes,
-                            postId: postId,
-                            commentId: commentId,
-                        }
                     });
-                    dispatch({
-                        type: EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, editNewsPostCommentReactionLikesAndDislikes: {
-                            likes: likes - 1,
-                            dislikes: dislikes,
-                            postId: postId,
-                            commentId: commentId,
-                        }
-                    });
+                    user.reaction.comment.changeLikesAndDislikes(postId, commentId, likes - 1, dislikes);
                     dispatch({ type: DELETE_USER_REACTION, deleteUserReaction: { postId: postId, commentId: commentId } })
                 }
                 /// comment like dislike
@@ -178,46 +162,42 @@ const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload })
                             else { return currentReaction }
                         })
                     })
-                    dispatch({
-                        type: EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, editNewsPostCommentReactionLikesAndDislikes: {
-                            likes: likes + 1,
-                            dislikes: dislikes - 1,
-                            postId: postId,
-                            commentId: commentId,
-                        }
-                    });
-                    dispatch({ type: EDIT_USER_REACTION, editUserReaction: { postId, commentId, reaction: 'like' } })
+                    user.reaction.comment.changeLikesAndDislikes(postId, commentId, likes + 1, dislikes - 1);
+                    let newReaction: UserReaction = { postId, commentId, reaction: 'like', postHeader: payload.post.content.header, commentHeader: payload.commentHeader };
+                    dispatch({ type: EDIT_USER_REACTION, editUserReaction: newReaction })
                 }
             }
         }
         let changeDislikes = () => {
             if (type === 'post') {
                 if (userReactionString === 'empty') {
+                    let newReaction: UserReaction = { postId, reaction: 'dislike', postHeader: payload.post.content.header };
                     updateFirestoreCollectionField('posts', postId, { reaction: { dislikes: dislikes + 1, likes, views } })
-                    updateFirestoreCollectionField('users', userUid, { reaction: [...userReaction, { postId, reaction: 'dislike' }] })
-                    dispatch({ type: EDIT_NEWS_REACTION, editNewsReaction: { ReactionType: 'dislike', postId, count: dislikes + 1 } })
-                    dispatch({ type: ADD_USER_REACTION, addUserReaction: { postId, reaction: 'dislike' } })
+                    updateFirestoreCollectionField('users', userUid, { reaction: [newReaction, ...userReaction] })
+                    user.reaction.post.changeLikesAndDislikes(postId, likes, dislikes + 1);
+                    dispatch({ type: ADD_USER_REACTION, addUserReaction: newReaction })
                 }
                 else if (userReactionString === 'dislike') {
                     updateFirestoreCollectionField('posts', postId, { reaction: { dislikes: dislikes - 1, likes, views } })
-                    updateFirestoreCollectionField('users', userUid, { reaction: [...userReaction.filter((reaction: UserReaction) => reaction.postId === postId)] })
-                    dispatch({ type: EDIT_NEWS_REACTION, editNewsReaction: { ReactionType: 'dislike', postId, count: dislikes - 1 } })
-                    dispatch({ type: DELETE_USER_REACTION, deleteUserReaction: { postId: postId } })
+                    updateFirestoreCollectionField('users', userUid, { reaction: [...userReaction.filter((reaction: UserReaction) => reaction.postId !== postId)] })
+                    user.reaction.post.changeLikesAndDislikes(postId, likes, dislikes - 1);
+                    dispatch({ type: DELETE_USER_ONLY_POST_REACTION, deleteUserOnlyPostReaction: postId })
                 }
                 else if (userReactionString === 'like') {
                     updateFirestoreCollectionField('users', userUid, {
-                        reaction: [...userReaction.map((reaction: UserReaction) => {
+                        reaction: [...userReaction].map((reaction: UserReaction) => {
                             if (reaction.postId === postId) {
                                 let newReaction: UserReaction = { ...reaction }
                                 newReaction.reaction = 'dislike'
                                 return newReaction
                             }
                             else { return reaction }
-                        })]
+                        })
                     })
                     updateFirestoreCollectionField('posts', postId, { reaction: { likes: likes - 1, dislikes: dislikes + 1, views } })
-                    dispatch({ type: EDIT_USER_REACTION, editUserReaction: { postId, reaction: 'dislike' } })
-                    dispatch({ type: EDIT_NEWS_LIKES_AND_DISLIKES, editNewsLikesAndDislikes: { postId, likes: likes - 1, dislikes: dislikes + 1 } })
+                    let newReaction: UserReaction = { postId, reaction: 'dislike', postHeader: payload.post.content.header }
+                    dispatch({ type: EDIT_USER_REACTION, editUserReaction: newReaction })
+                    user.reaction.post.changeLikesAndDislikes(postId, likes - 1, dislikes + 1);
                 }
             }
             /// type: comment
@@ -235,16 +215,10 @@ const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload })
                             else { return currentComment }
                         })
                     })
-                    updateFirestoreCollectionField('users', userUid, { reaction: [...userReaction, { postId, commentId, reaction: 'dislike' }] })
-                    dispatch({
-                        type: EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, editNewsPostCommentReactionLikesAndDislikes: {
-                            likes: likes,
-                            dislikes: dislikes + 1,
-                            postId: postId,
-                            commentId: commentId,
-                        }
-                    });
-                    dispatch({ type: ADD_USER_REACTION, addUserReaction: { postId, commentId, reaction: 'dislike' } })
+                    let newReaction: UserReaction = { postId, commentId, reaction: 'dislike', postHeader: payload.post.content.header, commentHeader: payload.commentHeader };
+                    updateFirestoreCollectionField('users', userUid, { reaction: [newReaction, ...userReaction] })
+                    user.reaction.comment.changeLikesAndDislikes(postId, commentId, likes, dislikes + 1);
+                    dispatch({ type: ADD_USER_REACTION, addUserReaction: newReaction })
                 }
                 /// comment dislike dislike
                 else if (userCommentString === 'dislike') {
@@ -264,15 +238,8 @@ const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload })
                         reaction: [...userReaction].filter((currentReaction: UserReaction) => {
                             return (currentReaction.commentId !== commentId) && (currentReaction.postId !== postId)
                         })
-                    })
-                    dispatch({
-                        type: EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, editNewsPostCommentReactionLikesAndDislikes: {
-                            likes: likes,
-                            dislikes: dislikes - 1,
-                            postId: postId,
-                            commentId: commentId,
-                        }
                     });
+                    user.reaction.comment.changeLikesAndDislikes(postId, commentId, likes, dislikes - 1);
                     dispatch({ type: DELETE_USER_REACTION, deleteUserReaction: { postId: postId, commentId: commentId } })
                 }
                 /// comment dislike like
@@ -300,15 +267,9 @@ const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload })
                             else { return currentReaction }
                         })
                     })
-                    dispatch({
-                        type: EDIT_NEWS_POST_COMMENT_REACTION_LIKES_AND_DISLIKES, editNewsPostCommentReactionLikesAndDislikes: {
-                            likes: likes - 1,
-                            dislikes: dislikes + 1,
-                            postId: postId,
-                            commentId: commentId,
-                        }
-                    });
-                    dispatch({ type: EDIT_USER_REACTION, editUserReaction: { postId, commentId, reaction: 'dislike' } })
+                    user.reaction.comment.changeLikesAndDislikes(postId, commentId, likes - 1, dislikes + 1);
+                    let newReaction: UserReaction = { postId, commentId, reaction: 'dislike', postHeader: payload.post.content.header, commentHeader: payload.commentHeader }
+                    dispatch({ type: EDIT_USER_REACTION, editUserReaction: newReaction })
                 }
             }
         }
@@ -318,9 +279,9 @@ const Reaction: FunctionComponent<ReactionProps> = ({ type, canReact, payload })
     let [views, likes, dislikes, changeViews, changeLikes, changeDislikes] = setReactionValues(type)
 
     return (<React.Fragment>
-        {!payload.commentId && <div>type: {type}, canReact: {canReact ? 'true' : 'false'}, userReaction: {userReactionString}</div>}
-        {payload.commentId && (<div>type: {type}, canReact: {canReact ? 'true' : 'false'}, userCommentReaction: {userCommentString}</div>)}
-        <div>
+        <DevMode>{!payload.commentId && <div>type: {type}, canReact: {canReact ? 'true' : 'false'}, userReaction: {userReactionString}</div>}
+            {payload.commentId && (<div>type: {type}, canReact: {canReact ? 'true' : 'false'}, userCommentReaction: {userCommentString}</div>)}</DevMode>
+        <div className="reaction">
             {type === 'post' && (<>Views: {views} <Button callback={() => changeViews()} text="views" />,</>)}
             Likes: {likes} {canReact && isAuth && <Button text="like" callback={() => changeLikes()} />},
             Dislikes: {dislikes} {canReact && isAuth && <Button callback={() => changeDislikes()} text="dislike" />}

@@ -1,8 +1,9 @@
 .posts>div {
-    padding: 10px;
+    padding: 20px;
     background: var(--color-the-brightest);
-    border-radius: 5px;
-    margin-bottom: 10px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
 }
 
 .posts>div:last-child {

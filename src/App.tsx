@@ -17,6 +17,8 @@ import PostPage from './components/PostPage';
 import { getPosts } from './firebase/firestore';
 import { EDIT_NEWS, EDIT_NEWS_LOADING } from './store/consts';
 import { store } from './store/store';
+import ReactionPage from './components/ReactionPage';
+import SeeProfileOfUser from './components/SeeProfileOfUser';
 
 const App = () => {
 
@@ -24,7 +26,10 @@ const App = () => {
   // console.log(isAuth)
   // test()
 
+
+
   useEffect(() => {
+
 
     getPosts().then((res) => {
       let newPosts: StorePost[] | [] = []
@@ -40,6 +45,8 @@ const App = () => {
     console.log('News Mount')
 
   }, [])
+
+
 
 
   return (
@@ -61,6 +68,7 @@ const App = () => {
             <Route path='sign-up' element={<PrivateRoute isAuthicated={!isAuth} redirectPath='/profile/dashboard'>
               <SignUp />
             </PrivateRoute>} />
+            <Route path=':userId' element={<SeeProfileOfUser />} />
             <Route path='dashboard' element={<PrivateRoute isAuthicated={isAuth} redirectPath='/profile' >
               <Outlet />
             </PrivateRoute>}>
@@ -69,6 +77,11 @@ const App = () => {
               <Route path='create-post' element={<CreateOrEditPost type='create' />} />
               <Route path='edit-post' element={<CreateOrEditPost type='edit' />} />
             </Route>
+          </Route>
+          <Route path='reaction' element={<PrivateRoute isAuthicated={isAuth} redirectPath='/profile'>
+            <Outlet />
+          </PrivateRoute>}>
+            <Route index={true} element={<ReactionPage />} />
           </Route>
           <Route path='*' element={<NotFound />} />
         </Route>
